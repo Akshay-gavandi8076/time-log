@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react'
-
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,22 +17,21 @@ import { DatePicker } from './DatePicker'
 import { useLogStore } from '@/store'
 import { useToast } from '@/components/ui/use-toast'
 import dayjs from 'dayjs'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-const NewLog = () => {
+export function NewLog() {
   const { toast } = useToast()
-
   const log = useLogStore((state) => state.log)
-
   const setLog = useLogStore((state) => state.setLog)
-
   const setLogs = useLogStore((state) => state.setLogs)
   const logs = useLogStore((state) => state.setLogs)
+  const supabase = createClientComponentClient()
 
   const closeDialog = () => {
     document.getElementById('close-btn')?.click()
   }
 
-  const validDateLog = () => {
+  const validateLog = () => {
     if (!log.date || !log.hour || log.hour === 0) {
       throw 'Date or hour can not be empty'
     } else if (log.hour >= 24) {
@@ -42,18 +39,28 @@ const NewLog = () => {
     }
   }
 
-  const onSubmitLog = () => {
+  const submitLog = async () => {
     try {
-      validDateLog()
-      setLogs(log, dayjs(log.date).format('YYYY-MM-DD'))
-      toast({
-        title: 'Successfully create log',
-        description: `${log.hour} hours in ${log.date.toDateString()}`,
-      })
-
-      closeDialog()
-
-      // call to supabase
+      validateLog()
+      const { error } = await supabase
+        .from('logs')
+        .upsert({ ...log, date: dayjs(log.date).format('YYYY-MM-DD') })
+        .select('*')
+        .single()
+      if (!error) {
+        setLogs(log, dayjs(log.date).format('YYYY-MM-DD'))
+        toast({
+          title: 'Successfully create log',
+          description: `${log.hour} hours in ${log.date.toDateString()}`,
+        })
+        closeDialog()
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Fail to create log',
+          description: error.message,
+        })
+      }
     } catch (e) {
       toast({
         variant: 'destructive',
@@ -75,7 +82,7 @@ const NewLog = () => {
           <DialogTitle>Create Log</DialogTitle>
           <DialogDescription>
             {
-              'Remember, time is your most valuable asset - invest it wisely with out Time Log App!'
+              'Remember, time is your most valuable asset - invest it wisely with our Time Log App!'
             }
           </DialogDescription>
         </DialogHeader>
@@ -85,10 +92,11 @@ const NewLog = () => {
               htmlFor='date'
               className='text-right'
             >
-              date
+              date{' '}
             </Label>
             <DatePicker />
           </div>
+
           <div className='grid grid-cols-4 items-center gap-4'>
             <Label
               htmlFor='hour'
@@ -102,7 +110,10 @@ const NewLog = () => {
               className='col-span-3'
               value={log.hour}
               onChange={(e) =>
-                setLog({ ...log, hour: parseInt(e.target.value) })
+                setLog({
+                  ...log,
+                  hour: parseInt(e.target.value),
+                })
               }
             />
           </div>
@@ -115,24 +126,27 @@ const NewLog = () => {
             </Label>
             <Input
               id='note'
-              placeholder='note the task'
+              placeholder='note of the log'
               className='col-span-3'
               value={log.note}
-              onChange={(e) => setLog({ ...log, note: e.target.value })}
+              onChange={(e) =>
+                setLog({
+                  ...log,
+                  note: e.target.value,
+                })
+              }
             />
           </div>
         </div>
         <DialogFooter>
           <Button
             type='submit'
-            onClick={onSubmitLog}
+            onClick={submitLog}
           >
-            Save changes
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-
-export default NewLog
