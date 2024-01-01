@@ -1,8 +1,6 @@
 'use client'
-
-import dayjs from 'dayjs'
 import React from 'react'
-
+import dayjs from 'dayjs'
 import {
   HoverCard,
   HoverCardContent,
@@ -11,11 +9,11 @@ import {
 import { cn } from '@/lib/utils'
 import { useLogStore } from '@/store'
 
-const Calendar = () => {
+export default function Calendar() {
   const logs = useLogStore((state) => state.logs)
+
   function getDateInMonth(year = dayjs().year(), month = dayjs().month()) {
     const startDate = dayjs().year(year).month(month).date(1)
-
     const endDate = startDate.endOf('month')
 
     const datesArray = []
@@ -23,7 +21,6 @@ const Calendar = () => {
     for (let i = startDate.date(); i <= endDate.date(); i++) {
       datesArray.push(startDate.date(i).format('YYYY-MM-DD'))
     }
-
     return datesArray
   }
 
@@ -38,11 +35,10 @@ const Calendar = () => {
       return 'bg-green-500'
     }
   }
-
-  const hour = 0
+  const hour = 10
 
   return (
-    <div className='border border-dashed flex flex-wrap gap-2 p-10 justify-center rounded-md'>
+    <div className=' border border-dashed flex flex-wrap gap-2 p-10 justify-center rounded-md'>
       {getDateInMonth().map((value, index) => {
         const log = logs[value]
 
@@ -51,7 +47,7 @@ const Calendar = () => {
             <HoverCardTrigger>
               <div
                 className={cn(
-                  'h-5 w-5 bg-gray-100 rounded-sm cursor-pointer',
+                  'h-5 w-5  rounded-sm cursor-pointer',
                   getColor(log?.hour || 0)
                 )}
               ></div>
@@ -65,5 +61,3 @@ const Calendar = () => {
     </div>
   )
 }
-
-export default Calendar

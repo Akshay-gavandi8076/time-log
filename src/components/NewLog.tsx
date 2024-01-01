@@ -1,5 +1,4 @@
 'use client'
-
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -42,16 +41,17 @@ export function NewLog() {
   const submitLog = async () => {
     try {
       validateLog()
+      const date = log.date as Date
+
       const { error } = await supabase
         .from('logs')
         .upsert({ ...log, date: dayjs(log.date).format('YYYY-MM-DD') })
         .select('*')
         .single()
       if (!error) {
-        setLogs(log, dayjs(log.date).format('YYYY-MM-DD'))
+        setLogs(log, dayjs(date).format('YYYY-MM-DD'))
         toast({
-          title: 'Successfully create log',
-          description: `${log.hour} hours in ${log.date.toDateString()}`,
+          description: `${log.hour} hours in ${date.toDateString()}`,
         })
         closeDialog()
       } else {
